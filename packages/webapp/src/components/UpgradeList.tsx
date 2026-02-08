@@ -12,65 +12,9 @@ export const UpgradeList: FC<UpgradeListProps> = ({ upgrades, score, onUpgrade }
   const clickUpgrades = upgrades.filter(u => u.effect === 'clickValue')
   const passiveUpgrades = upgrades.filter(u => u.effect === 'perSecond')
 
-  const UpgradeSection: FC<{ title: string; subtitle: string; upgrades: Upgrade[]; emojis: string; compact?: boolean }> = ({ 
-    title, 
-    subtitle, 
-    upgrades: sectionUpgrades,
-    emojis,
-    compact = false
-  }) => (
-    <div className={compact ? "border-2 border-cyan-500/50 bg-black/50 backdrop-blur p-4" : "border-2 border-purple-500/50 bg-black/50 backdrop-blur"}>
-      {/* Section Header */}
-      {!compact && (
-        <div className="border-b border-purple-500/30 px-6 py-4 bg-gradient-to-r from-purple-500/10 to-cyan-500/0">
-          <h3 className="text-lg font-black uppercase tracking-wider flex items-center gap-2" style={{
-            background: 'linear-gradient(135deg, #ff00ff 0%, #00ffff 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
-          }}>
-            <span className="text-2xl">{emojis}</span>
-            {title}
-          </h3>
-          <p className="text-purple-400/60 text-xs uppercase tracking-widest mt-2">{subtitle}</p>
-        </div>
-      )}
-
-      {compact && (
-        <div className="mb-4 pb-4 border-b border-cyan-500/30">
-          <h3 className="text-lg font-black uppercase tracking-wider flex items-center gap-2" style={{
-            background: 'linear-gradient(135deg, #00ff88 0%, #00ffcc 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
-          }}>
-            <span className="text-2xl">{emojis}</span>
-            {title}
-          </h3>
-          <p className="text-cyan-400/60 text-xs uppercase tracking-widest mt-2">{subtitle}</p>
-        </div>
-      )}
-
-      {/* Upgrades in section */}
-      <div className={compact ? "grid grid-cols-3 gap-4" : "p-4 space-y-3"}>
-        {sectionUpgrades.map((upgrade, idx) => {
-          const isAffordable = score >= upgrade.cost
-          return (
-            <UpgradeCard
-              key={upgrade.id}
-              upgrade={upgrade}
-              isAffordable={isAffordable}
-              onPurchase={() => onUpgrade(upgrade.id)}
-              index={idx}
-              compact={compact}
-            />
-          )
-        })}
-      </div>
-    </div>
-  )
-
   return (
     <div className="space-y-4 h-full flex flex-col">
-      <div className="border-2 border-cyan-500/50 bg-black/50 backdrop-blur p-4">
+      <div className="border-2 border-cyan-500/50 bg-black/50 backdrop-blur p-4 flex-shrink-0 overflow-visible">
         <div className="mb-4 pb-4 border-b border-cyan-500/30">
           <h3 className="text-lg font-black uppercase tracking-wider flex items-center gap-2" style={{
             background: 'linear-gradient(135deg, #00ff88 0%, #00ffcc 100%)',

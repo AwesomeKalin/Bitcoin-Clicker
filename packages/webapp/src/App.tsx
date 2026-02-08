@@ -1,10 +1,12 @@
 import { useGameState } from './hooks/useGameState'
+import { useAuth } from './hooks/useAuth'
 import { Header } from './components/Header'
 import { ScoreDisplay } from './components/ScoreDisplay'
 import { ClickButton } from './components/ClickButton'
 import { UpgradeList } from './components/UpgradeList'
 
-export default function App(): JSX.Element {
+export default function App() {
+  const token = useAuth()
   const {
     score,
     clickValue,
@@ -13,7 +15,8 @@ export default function App(): JSX.Element {
     upgrades,
     handleClick,
     handleUpgrade,
-  } = useGameState()
+    isLoading,
+  } = useGameState(token)
 
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden fixed inset-0" style={{ fontFamily: "'Space Mono', monospace" }}>
@@ -31,31 +34,40 @@ export default function App(): JSX.Element {
       <Header clickCount={clickCount} />
 
       {/* Main content */}
-      <div className="relative max-w-7xl mx-auto px-8 py-4 grid grid-cols-4 gap-6 h-[calc(100vh-120px)]">
-        {/* LEFT: Clicker Section (2 columns) */}
-        <div className="col-span-2 flex flex-col gap-4 min-h-0">
-          <ScoreDisplay
-            score={score}
-            clickValue={clickValue}
-            perSecond={perSecond}
-          />
+      {isLoading ? (
+        <div className="fixed inset-0 flex items-center justify-center pt-20">
+          <div className="text-center">
+            <div className="text-4xl mb-4">⚡</div>
+            <p className="text-cyan-400 text-xl uppercase tracking-widest animate-pulse">Loading game state...</p>
+          </div>
+        </div>
+      ) : (
+        <div className="relative max-w-7xl mx-auto px-8 py-4 grid grid-cols-4 gap-6 h-[calc(100vh-120px)]">
+          {/* LEFT: Clicker Section (2 columns) */}
+          <div className="col-span-2 flex flex-col gap-4 min-h-0">
+            <ScoreDisplay
+              score={score}
+              clickValue={clickValue}
+              perSecond={perSecond}
+            />
 
-          <div className="flex-1 flex items-center justify-center min-h-0">
-            <ClickButton onClick={handleClick} />
+            <div className="flex-1 flex items-center justify-center min-h-0">
+              <ClickButton onClick={handleClick} />
+            </div>
+
+            <p className="text-center text-cyan-400/50 text-xs uppercase tracking-widest">[ Click to mine ]</p>
           </div>
 
-          <p className="text-center text-cyan-400/50 text-xs uppercase tracking-widest">[ Click to mine ]</p>
+          {/* RIGHT: Upgrades Section (2 columns) */}
+          <div className="col-span-2 h-full max-h-[calc(100vh-120px)] overflow-y-auto pr-4">
+            <UpgradeList
+              upgrades={upgrades}
+              score={score}
+              onUpgrade={handleUpgrade}
+            />
+          </div>
         </div>
-
-        {/* RIGHT: Upgrades Section (2 columns) */}
-        <div className="col-span-2 h-full max-h-[calc(100vh-120px)] overflow-y-auto pr-4">
-          <UpgradeList
-            upgrades={upgrades}
-            score={score}
-            onUpgrade={handleUpgrade}
-          />
-        </div>
-      </div>
+      )}
 
       <style>{`
         html, body {

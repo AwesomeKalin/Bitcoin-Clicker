@@ -27,9 +27,7 @@ export const ScoreDisplay: FC<ScoreDisplayProps> = ({ score, clickValue, perSeco
         </div>
         <div className="space-y-2 mt-4 text-sm">
           <p className="text-lime-400">→ {clickValue} per click</p>
-          {perSecond > 0 && (
             <p className="text-emerald-400 animate-pulse">→ {perSecond}/sec</p>
-          )}
         </div>
       </div>
       <div className="absolute top-1 right-1 w-2 h-2 bg-cyan-400 animate-pulse"></div>

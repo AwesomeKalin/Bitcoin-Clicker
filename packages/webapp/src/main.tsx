@@ -1,5 +1,6 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
+import { ConvexClientProvider } from './providers/ConvexProvider'
 import App from './App'
 
 import './styles.css'
@@ -9,6 +10,8 @@ if (!rootElement) throw new Error('Failed to find the root element')
 
 createRoot(rootElement).render(
   <React.StrictMode>
-    <App />
+    <ConvexClientProvider>
+      <App />
+    </ConvexClientProvider>
   </React.StrictMode>
 )

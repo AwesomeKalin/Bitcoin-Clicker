@@ -37,9 +37,10 @@ export const UpgradeCard: FC<UpgradeCardProps> = ({ upgrade, isAffordable, onPur
         </button>
 
         {/* Hover tooltip card */}
-        <div className="absolute left-0 top-24 w-48 bg-black/95 border-2 border-cyan-500/50 rounded-md p-4 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all duration-200 z-50 shadow-2xl"
+        <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 w-48 bg-black border-2 border-cyan-500 rounded-md p-4 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all duration-200 shadow-2xl"
           style={{
-            boxShadow: 'inset 0 0 20px rgba(34, 211, 238, 0.1), 0 0 30px rgba(34, 211, 238, 0.3)'
+            boxShadow: 'inset 0 0 20px rgb(34, 211, 238), 0 0 30px rgb(34, 211, 238)',
+            zIndex: 9999
           }}
         >
           <p className="font-bold text-white mb-2 text-sm uppercase tracking-wide">{upgrade.name}</p>

@@ -9,7 +9,7 @@ export const ClickButton: FC<ClickButtonProps> = ({ onClick }) => {
     <div className="relative w-full max-w-sm mx-auto">
       <button
         onClick={onClick}
-        className="w-full h-72 rounded-md border-4 border-cyan-400 bg-gradient-to-br from-cyan-500/20 to-purple-500/20 hover:from-cyan-500/40 hover:to-purple-500/40 transition-all duration-200 text-8xl font-black flex items-center justify-center relative group overflow-hidden active:scale-95"
+        className="w-full h-64 rounded-md border-4 border-cyan-400 bg-gradient-to-br from-cyan-500/20 to-purple-500/20 hover:from-cyan-500/40 hover:to-purple-500/40 transition-all duration-200 text-8xl font-black flex items-center justify-center relative group overflow-hidden active:scale-95"
         style={{
           boxShadow: '0 0 30px rgba(0, 255, 136, 0.4), inset 0 0 30px rgba(0, 255, 200, 0.1)'
         }}
