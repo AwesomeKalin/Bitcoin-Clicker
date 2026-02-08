@@ -1,0 +1,6 @@
+{
+  "name": "bitcoin-clicker-monorepo",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "packageManager": "bun"
+}
