@@ -4,7 +4,10 @@ import App from './App'
 
 import './styles.css'
 
-createRoot(document.getElementById('root')).render(
+const rootElement = document.getElementById('root')
+if (!rootElement) throw new Error('Failed to find the root element')
+
+createRoot(rootElement).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
