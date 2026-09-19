@@ -106,7 +106,7 @@ export class WalletService {
                     outputDescription: 'Bitcoin Clicker action signature',
                 },
             ],
-            options: { acceptDelayedBroadcast: false },
+            options: { acceptDelayedBroadcast: false, randomizeOutputs: false },
         });
 
         if (!result.txid) throw new Error('Wallet did not return a broadcast transaction ID');
