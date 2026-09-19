@@ -30,4 +30,6 @@ Run the app with:
 deno task dev
 ```
 
+GitHub Pages deployment runs from `.github/workflows/deploy-pages.yml` whenever `main` is updated. Enable **Settings > Pages > Build and deployment > Source > GitHub Actions** in the repository, then the site will be available at `https://awesomekalin.github.io/Bitcoin-Clicker/` after the workflow completes.
+
 The `Connect wallet` button connects the installed BRC-100 wallet. Signing is intentionally not triggered by connecting or clicking.

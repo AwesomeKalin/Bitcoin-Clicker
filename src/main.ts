@@ -170,6 +170,8 @@ class ClickerScene extends Phaser.Scene {
             const refresh = () =>
                 this.refreshDeviceItem(device, quantityInput, costLabel, ownedLabel);
 
+            refresh();
+
             quantityInput.addEventListener('input', refresh);
             buyButton.addEventListener('click', () =>
                 this.purchaseDevice(device, quantityInput, buyButton, refresh),
@@ -306,7 +308,6 @@ class ClickerScene extends Phaser.Scene {
                 status.textContent = 'Loading blockchain state...';
                 const loadedActions = await this.wallet.loadActions();
                 this.replayActions(loadedActions);
-                this.refreshDeviceOwnedLabels();
                 status.textContent = `Loaded ${loadedActions.length} actions`;
                 this.startSigningTimer(status);
             } catch (error) {
@@ -317,9 +318,15 @@ class ClickerScene extends Phaser.Scene {
     }
 
     private replayActions(actions: GameAction[]): void {
+        let previousTimestamp = actions[0]?.timestamp ?? Math.floor(Date.now() / 1000);
+
         for (const action of actions) {
+            const elapsedSeconds = Math.max(0, action.timestamp - previousTimestamp);
+            this.coins += this.satsPerSecond * BigInt(elapsedSeconds);
+
             if (action.type === 'click') {
                 this.coins += this.satsPerClick;
+                previousTimestamp = action.timestamp;
                 continue;
             }
 
@@ -328,7 +335,9 @@ class ClickerScene extends Phaser.Scene {
                 if (upgrade && !this.purchasedUpgradeIds.has(upgrade.id)) {
                     this.purchasedUpgradeIds.add(upgrade.id);
                     this.satsPerClick += satsToUnits(upgrade.satsPerClick);
+                    this.coins -= satsToUnits(upgrade.cost);
                 }
+                previousTimestamp = action.timestamp;
                 continue;
             }
 
@@ -342,16 +351,23 @@ class ClickerScene extends Phaser.Scene {
                     const owned = this.deviceCounts.get(device.id) ?? 0;
                     this.deviceCounts.set(device.id, owned + action.quantity);
                     this.satsPerSecond += BigInt(device.productionPerSecondUnits * action.quantity);
+                    this.coins -= satsToUnits(deviceBulkCost(device, owned, action.quantity));
                 }
             }
+
+            previousTimestamp = action.timestamp;
         }
 
-        this.updateBalanceLabels();
-        this.refreshDeviceOwnedLabels();
+        const currentTimestamp = Math.floor(Date.now() / 1000);
+        this.coins +=
+            this.satsPerSecond * BigInt(Math.max(0, currentTimestamp - previousTimestamp));
+
         document.querySelector('.device-panel')?.remove();
         document.querySelector('.upgrade-panel')?.remove();
         this.createUpgradeControls();
         this.createDeviceControls();
+        this.updateBalanceLabels();
+        this.refreshDeviceOwnedLabels();
     }
 
     private startSigningTimer(status: HTMLSpanElement): void {
