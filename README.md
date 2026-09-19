@@ -22,6 +22,8 @@ After connection, the game checks the action queue every 120 seconds. If actions
 
 `WalletService` connects to a BRC-100 wallet through Yours Wallet's `@1sat/connect` package. Its `signAndBroadcast(queue)` method owns the complete batch flow and uses the wallet's BRC-100 `createAction` method with delayed broadcasting disabled.
 
+When a wallet connects, the game loads the wallet's Bitcoin Clicker action history, fetches each raw transaction through `OneSatServices`, decodes the `bitclick` outputs, and replays them in timestamp order. This restores clicks, purchased upgrades, device ownership, and passive production without re-queuing historical actions.
+
 Run the app with:
 
 ```sh

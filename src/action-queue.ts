@@ -11,6 +11,50 @@ export interface GameAction {
     outputScriptHex: string;
     createdAt: number;
     timestamp: number;
+    upgradeId?: number;
+    deviceId?: number;
+    quantity?: number;
+}
+
+export function decodeGameAction(outputScriptHex: string): GameAction | null {
+    outputScriptHex = outputScriptHex.replace(/^0x/i, '').replace(/\s+/g, '').toLowerCase();
+    const prefix = `006a07${BITCLICK_HEADER_HEX}${CLICK_VERSION_HEX}`;
+    if (!outputScriptHex.startsWith(prefix)) return null;
+
+    const timestampLengthOffset = prefix.length;
+    const timestampLength = Number.parseInt(
+        outputScriptHex.slice(timestampLengthOffset, timestampLengthOffset + 2),
+        16,
+    );
+    if (!Number.isInteger(timestampLength)) return null;
+    const timestampStart = timestampLengthOffset + 2;
+    const timestampEnd = timestampStart + timestampLength * 2;
+    const timestampHexValue = outputScriptHex.slice(timestampStart, timestampEnd);
+    const opcode = outputScriptHex.slice(timestampEnd, timestampEnd + 2);
+    const params = outputScriptHex.slice(timestampEnd + 2);
+    if (!timestampHexValue || timestampHexValue.length !== timestampLength * 2) return null;
+
+    const action: GameAction = {
+        id: 0,
+        type: 'unknown',
+        outputScriptHex,
+        createdAt: 0,
+        timestamp: Number.parseInt(timestampHexValue, 16),
+    };
+
+    if (opcode === CLICK_OPCODE_HEX && params === '') return { ...action, type: 'click' };
+    if (opcode === UPGRADE_OPCODE_HEX && params.length === 4) {
+        return { ...action, type: 'upgrade', upgradeId: Number.parseInt(params, 16) };
+    }
+    if (opcode === DEVICE_OPCODE_HEX && params.length === 4) {
+        return {
+            ...action,
+            type: 'device',
+            deviceId: Number.parseInt(params.slice(0, 2), 16),
+            quantity: Number.parseInt(params.slice(2), 16),
+        };
+    }
+    return null;
 }
 
 function timestampHex(timestamp: number): string {

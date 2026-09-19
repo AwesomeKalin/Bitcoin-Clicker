@@ -1,11 +1,13 @@
 import { createContext, signBsm } from '@1sat/actions';
 import { OneSatServices } from '@1sat/client';
 import { connectWallet, type ConnectWalletResult } from '@1sat/connect';
+import { Transaction } from '@bsv/sdk';
 
-import { createBitsigclickOutputScript } from './action-queue.ts';
+import { createBitsigclickOutputScript, decodeGameAction } from './action-queue.ts';
 import type { ActionQueue, GameAction } from './action-queue.ts';
 
 const services = new OneSatServices('main');
+const ACTION_DESCRIPTION_PREFIX = 'Bitcoin Clicker:';
 
 export interface SignedActionBatch {
     actions: GameAction[];
@@ -111,5 +113,27 @@ export class WalletService {
 
         queue.remove(batch.actions.map((action) => action.id));
         return { ...batch, signatureOutput, txid: result.txid };
+    }
+
+    async loadActions(): Promise<GameAction[]> {
+        if (!this.connection) throw new Error('Connect a wallet before loading blockchain state');
+
+        const history = await this.connection.wallet.listActions({ labels: [], limit: 1000 });
+        const transactions = history.actions.filter((action) =>
+            action.description.startsWith(ACTION_DESCRIPTION_PREFIX),
+        );
+        const loadedActions: GameAction[] = [];
+
+        for (const action of transactions) {
+            const rawTransaction = await services.getRawTx(action.txid);
+            if (!rawTransaction.rawTx) continue;
+            const transaction = Transaction.fromBinary(rawTransaction.rawTx);
+            for (const output of transaction.outputs) {
+                const decoded = decodeGameAction(output.lockingScript.toHex());
+                if (decoded) loadedActions.push({ ...decoded, createdAt: 0 });
+            }
+        }
+
+        return loadedActions.sort((left, right) => left.timestamp - right.timestamp);
     }
 }

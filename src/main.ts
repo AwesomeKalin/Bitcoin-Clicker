@@ -28,6 +28,7 @@ class ClickerScene extends Phaser.Scene {
     private readonly actionQueue = new ActionQueue();
     private wallet: {
         connect: () => Promise<string>;
+        loadActions: () => Promise<GameAction[]>;
         signAndBroadcast: (
             queue: ActionQueue,
         ) => Promise<(SignedActionBatch & { txid: string; signatureOutput: string }) | null>;
@@ -148,6 +149,7 @@ class ClickerScene extends Phaser.Scene {
         for (const device of devices) {
             const item = document.createElement('article');
             item.className = 'device-item';
+            item.dataset.deviceId = String(device.id);
             item.innerHTML = `
         <div class="device-info">
           <strong>${device.name}</strong>
@@ -212,12 +214,26 @@ class ClickerScene extends Phaser.Scene {
         this.satsPerSecond += BigInt(device.productionPerSecondUnits * quantity);
         this.actionQueue.addDevice(device.id, quantity);
         this.updateBalanceLabels();
+        this.refreshDeviceOwnedLabels();
         refresh();
     }
 
     private clampQuantity(quantity: number): number {
         if (!Number.isFinite(quantity)) return 1;
         return Math.min(255, Math.max(1, Math.floor(quantity)));
+    }
+
+    private refreshDeviceOwnedLabels(): void {
+        for (const device of devices) {
+            const item = document.querySelector<HTMLElement>(
+                `.device-item[data-device-id="${device.id}"]`,
+            );
+            const ownedLabel = item?.querySelector<HTMLElement>('.device-owned');
+            if (!ownedLabel) continue;
+
+            const owned = this.deviceCounts.get(device.id) ?? 0;
+            ownedLabel.textContent = `Owned: ${owned} | Next: ${formatSats(satsToUnits(deviceUnitCost(device, owned)))}`;
+        }
     }
 
     private createUpgradeControls(): void {
@@ -287,12 +303,55 @@ class ClickerScene extends Phaser.Scene {
                 const identityKey = await this.wallet.connect();
                 status.textContent = `Connected: ${identityKey.slice(0, 12)}...`;
                 button.textContent = 'Wallet connected';
+                status.textContent = 'Loading blockchain state...';
+                const loadedActions = await this.wallet.loadActions();
+                this.replayActions(loadedActions);
+                this.refreshDeviceOwnedLabels();
+                status.textContent = `Loaded ${loadedActions.length} actions`;
                 this.startSigningTimer(status);
             } catch (error) {
                 status.textContent = error instanceof Error ? error.message : 'Connection failed';
                 button.disabled = false;
             }
         });
+    }
+
+    private replayActions(actions: GameAction[]): void {
+        for (const action of actions) {
+            if (action.type === 'click') {
+                this.coins += this.satsPerClick;
+                continue;
+            }
+
+            if (action.type === 'upgrade' && action.upgradeId !== undefined) {
+                const upgrade = upgrades.find((candidate) => candidate.id === action.upgradeId);
+                if (upgrade && !this.purchasedUpgradeIds.has(upgrade.id)) {
+                    this.purchasedUpgradeIds.add(upgrade.id);
+                    this.satsPerClick += satsToUnits(upgrade.satsPerClick);
+                }
+                continue;
+            }
+
+            if (
+                action.type === 'device' &&
+                action.deviceId !== undefined &&
+                action.quantity !== undefined
+            ) {
+                const device = devices.find((candidate) => candidate.id === action.deviceId);
+                if (device) {
+                    const owned = this.deviceCounts.get(device.id) ?? 0;
+                    this.deviceCounts.set(device.id, owned + action.quantity);
+                    this.satsPerSecond += BigInt(device.productionPerSecondUnits * action.quantity);
+                }
+            }
+        }
+
+        this.updateBalanceLabels();
+        this.refreshDeviceOwnedLabels();
+        document.querySelector('.device-panel')?.remove();
+        document.querySelector('.upgrade-panel')?.remove();
+        this.createUpgradeControls();
+        this.createDeviceControls();
     }
 
     private startSigningTimer(status: HTMLSpanElement): void {
