@@ -1,6 +1,30 @@
 {
-  "name": "bitcoin-clicker-monorepo",
-  "private": true,
-  "workspaces": ["packages/*"],
-  "packageManager": "bun"
+    "name": "bitcoin-clicker",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc && vite build",
+        "preview": "vite preview",
+        "lint": "eslint .",
+        "format": "prettier --write .",
+        "format:check": "prettier --check ."
+    },
+    "dependencies": {
+        "@1sat/actions": "^0.0.221",
+        "@1sat/client": "^0.0.55",
+        "@1sat/connect": "^0.0.95",
+        "@bsv/sdk": "^2.7.1",
+        "phaser": "^4.2.1"
+    },
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^8.70.0",
+        "@typescript-eslint/parser": "^8.70.0",
+        "eslint": "^10.10.0",
+        "eslint-config-prettier": "^10.1.8",
+        "prettier": "^3.9.8",
+        "typescript": "~6.0.3",
+        "vite": "^8.3.0"
+    }
 }

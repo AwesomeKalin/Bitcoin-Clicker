@@ -1,0 +1,92 @@
+import { createContext, signBsm } from '@1sat/actions';
+import { OneSatServices } from '@1sat/client';
+import { connectWallet, type ConnectWalletResult } from '@1sat/connect';
+
+import { createBitsigclickOutputScript } from './action-queue.ts';
+import type { ActionQueue, GameAction } from './action-queue.ts';
+
+const services = new OneSatServices('main');
+
+export interface SignedActionBatch {
+    actions: GameAction[];
+    messageHex: string;
+    signature: string;
+    address?: string;
+    publicKey?: string;
+}
+
+export function createSignatureOutput(batch: SignedActionBatch): string {
+    if (!batch.publicKey) throw new Error('Wallet did not return a public key');
+
+    const signatureHex = Array.from(atob(batch.signature), (character) =>
+        character.charCodeAt(0).toString(16).padStart(2, '0'),
+    ).join('');
+    return createBitsigclickOutputScript(batch.publicKey, signatureHex);
+}
+
+type WalletContext = ReturnType<typeof createContext>;
+
+export class WalletService {
+    private connection: ConnectWalletResult | null = null;
+    private context: WalletContext | null = null;
+
+    get connected(): boolean {
+        return this.connection !== null;
+    }
+
+    get identityKey(): string | null {
+        return this.connection?.identityKey ?? null;
+    }
+
+    async connect(): Promise<string> {
+        const connection = await connectWallet({ autoDetect: true });
+        if (!connection) throw new Error('No compatible BRC-100 wallet was found');
+
+        this.connection = connection;
+        this.context = createContext(connection.wallet, { chain: 'main', services });
+        return connection.identityKey;
+    }
+
+    disconnect(): void {
+        this.connection?.disconnect();
+        this.connection = null;
+        this.context = null;
+    }
+
+    async signQueue(queue: ActionQueue): Promise<SignedActionBatch | null> {
+        if (!this.context) throw new Error('Connect a wallet before signing the queue');
+
+        const actions = queue.snapshot();
+        if (actions.length === 0) return null;
+
+        const messageHex = actions.map((action) => action.outputScriptHex).join('');
+        const result = await signBsm.execute(this.context, {
+            message: messageHex,
+            encoding: 'hex',
+        });
+
+        if (result.error || !result.sig) {
+            throw new Error(result.error ?? 'Wallet did not return a signature');
+        }
+
+        return {
+            actions,
+            messageHex,
+            signature: result.sig,
+            address: result.address,
+            publicKey: result.pubKey,
+        };
+    }
+
+    async signAndBroadcast(
+        queue: ActionQueue,
+        broadcast: (batch: SignedActionBatch) => Promise<void>,
+    ): Promise<SignedActionBatch | null> {
+        const batch = await this.signQueue(queue);
+        if (!batch) return null;
+
+        await broadcast(batch);
+        queue.remove(batch.actions.map((action) => action.id));
+        return batch;
+    }
+}
