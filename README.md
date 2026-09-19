@@ -1,6 +1,6 @@
 # Bitcoin Clicker
 
-Clicker game running on the BSV blockchain
+Clicker game running on the BSV blockchain. This project (currently) primarily exists for me to test out the capabilities of generative AI, and as such is entirely AI generated.
 
 ## Wallet and action queue
 
