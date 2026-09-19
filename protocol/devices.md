@@ -15,7 +15,9 @@ quantity is the amount being purchased. It is limited to 255 at once and must be
 All currently valid devices:
 
 00 - Basic Miner - 0.1 sat/sec - 100 sats
+
 01 - Pro Miner - 1 sat/sec - 500 sats
+
 02 - Advanced Miner - 5 sat/sec - 3000 sats
 
 The formula for the price is base price * (1.5)^(purchased quantity)

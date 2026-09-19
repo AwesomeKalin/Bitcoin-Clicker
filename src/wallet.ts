@@ -15,6 +15,11 @@ export interface SignedActionBatch {
     publicKey?: string;
 }
 
+export interface BroadcastedActionBatch extends SignedActionBatch {
+    signatureOutput: string;
+    txid: string;
+}
+
 export function createSignatureOutput(batch: SignedActionBatch): string {
     if (!batch.publicKey) throw new Error('Wallet did not return a public key');
 
@@ -78,15 +83,33 @@ export class WalletService {
         };
     }
 
-    async signAndBroadcast(
-        queue: ActionQueue,
-        broadcast: (batch: SignedActionBatch) => Promise<void>,
-    ): Promise<SignedActionBatch | null> {
+    async signAndBroadcast(queue: ActionQueue): Promise<BroadcastedActionBatch | null> {
+        if (!this.connection) throw new Error('Connect a wallet before broadcasting the queue');
+
         const batch = await this.signQueue(queue);
         if (!batch) return null;
 
-        await broadcast(batch);
+        const signatureOutput = createSignatureOutput(batch);
+        const result = await this.connection.wallet.createAction({
+            description: `Bitcoin Clicker: ${batch.actions.length} game actions`,
+            outputs: [
+                ...batch.actions.map((action) => ({
+                    lockingScript: action.outputScriptHex,
+                    satoshis: 0,
+                    outputDescription: `Bitcoin Clicker ${action.type} action`,
+                })),
+                {
+                    lockingScript: signatureOutput,
+                    satoshis: 0,
+                    outputDescription: 'Bitcoin Clicker action signature',
+                },
+            ],
+            options: { acceptDelayedBroadcast: false },
+        });
+
+        if (!result.txid) throw new Error('Wallet did not return a broadcast transaction ID');
+
         queue.remove(batch.actions.map((action) => action.id));
-        return batch;
+        return { ...batch, signatureOutput, txid: result.txid };
     }
 }

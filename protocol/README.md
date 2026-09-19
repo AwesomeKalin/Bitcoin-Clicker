@@ -37,13 +37,19 @@ bitsigclick is intentionally versionless, as it does not need one. If quantum re
 Example transaction:
 
 Input:
+
 0 - P2PKH for tx fee
 
 Output:
+
 0 - bitclick output
+
 1 - bitclick output
+
 2 - bitclick output
+
 3 - bitsigclick output, wallet x, created by concatinating output 0, 1 and 2
+
 4 - P2PKH change output
 
 In the above example, only one wallet is performing bitclick actions. bitsigclick is created from outputs 0, 1, and 2 and is signed against the public key included.
@@ -51,13 +57,19 @@ In the above example, only one wallet is performing bitclick actions. bitsigclic
 Example transaction #2:
 
 Input:
+
 0 - P2PKH for tx fee
 
 Output:
+
 0 - bitclick output
+
 1 - Ordinal output
+
 2 - bitclick output
+
 3 - bitsigclick output, wallet x, created from output 0 and 2
+
 4 - P2PKH change output
 
 In the above example, only output 0 and 2 create the signature. This is because output 1 is not a bitclick output and is instead an ordinal. This is not unique to ordinals and also applies to any other kind of transaction, such as a smart contract or a P2PKH output.
@@ -65,19 +77,31 @@ In the above example, only output 0 and 2 create the signature. This is because 
 Example transaction #3:
 
 Input:
+
 0 - P2PKH for tx fee
 
 Output:
+
 0 - OP_RETURN stating bundler's name
+
 1 - bitclick output
+
 2 - bitclick output
+
 3 - bitclick output
+
 4 - bitsigclick output, wallet x, created from output 1, 2, and 3
+
 5 - bitclick output
+
 6 - bitclick output
+
 7 - bitclick output
+
 8 - bitclick output
+
 9 - bitsigclick output, wallet y, created from output 5, 6, 7, and 8
+
 10 - P2PKH change output
 
 In the above example, two wallets are making several bitclick actions. Output 0 is not used in any signature creation as it is only for onlookers to see it was created by a specific bundler. Output 4 uses output 1, 2, and 3 for its signature as those are the outputs that lie before it. Output 4 does not sign anything after it as those outputs relate to a different wallet. Output 9 uses outputs 5, 6, 7, and 8 as those outputs are between output 4 and 9, therefore those are the actions relating to wallet y.

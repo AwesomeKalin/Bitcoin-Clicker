@@ -28,7 +28,9 @@ class ClickerScene extends Phaser.Scene {
     private readonly actionQueue = new ActionQueue();
     private wallet: {
         connect: () => Promise<string>;
-        signQueue: (queue: ActionQueue) => Promise<SignedActionBatch | null>;
+        signAndBroadcast: (
+            queue: ActionQueue,
+        ) => Promise<(SignedActionBatch & { txid: string; signatureOutput: string }) | null>;
     } | null = null;
     private signingTimer: number | null = null;
     private countdownTimer: number | null = null;
@@ -325,21 +327,19 @@ class ClickerScene extends Phaser.Scene {
         this.queueLabel.setText('Signing queued actions...');
         status.textContent = 'Please approve the action batch in your wallet...';
         try {
-            const batch = await this.wallet.signQueue(this.actionQueue);
+            const batch = await this.wallet.signAndBroadcast(this.actionQueue);
             if (!batch) return;
 
-            const { createSignatureOutput } = await import('./wallet.ts');
-            const signatureOutput = createSignatureOutput(batch);
             console.group('Bitcoin Clicker action batch');
             console.log(
                 'Action outputs:',
                 batch.actions.map((action) => action.outputScriptHex),
             );
             console.log('Message signed:', batch.messageHex);
-            console.log('bitsigclick output:', signatureOutput);
+            console.log('bitsigclick output:', batch.signatureOutput);
+            console.log('Broadcast transaction ID:', batch.txid);
             console.groupEnd();
-            this.actionQueue.remove(batch.actions.map((action) => action.id));
-            status.textContent = 'Signed outputs logged to the console | Next prompt in 120s';
+            status.textContent = `Broadcast ${batch.txid.slice(0, 12)}... | Next broadcast in 120s`;
         } catch (error) {
             status.textContent = error instanceof Error ? error.message : 'Signing failed';
         } finally {

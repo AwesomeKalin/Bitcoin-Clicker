@@ -18,9 +18,9 @@ The game layout uses the full window on PC and tablet screens: the clicker is on
 
 The wallet service is loaded with a dynamic import only after `Connect wallet` is pressed. Players can therefore start and play without a wallet, and the initial Phaser bundle does not include the blockchain provider packages.
 
-After connection, the game checks the action queue every 120 seconds. If actions are waiting, the wallet prompts for a BSM signature over their concatenated output scripts. The console then receives each action output, the signed message, and the serialized `bitsigclick` output. This development flow does not create transactions, broadcast them, or remove actions from the queue.
+After connection, the game checks the action queue every 120 seconds. If actions are waiting, the wallet prompts for a BSM signature over their concatenated output scripts, then creates and broadcasts one transaction containing the action outputs and serialized `bitsigclick` output. The queue is cleared only after the wallet returns a transaction ID. Failed or rejected operations leave the actions queued for the next interval.
 
-`WalletService` connects to a BRC-100 wallet through Yours Wallet's `@1sat/connect` package. A timer or other batching policy can later call `signAndBroadcast(queue, broadcast)`. The supplied `broadcast` callback owns transaction creation and broadcasting, so it can build one transaction for the whole batch and return only after that transaction has been accepted. The queue is cleared only after the callback succeeds.
+`WalletService` connects to a BRC-100 wallet through Yours Wallet's `@1sat/connect` package. Its `signAndBroadcast(queue)` method owns the complete batch flow and uses the wallet's BRC-100 `createAction` method with delayed broadcasting disabled.
 
 Run the app with:
 
